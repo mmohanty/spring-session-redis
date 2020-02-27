@@ -13,10 +13,10 @@ public class HelloController {
     private HttpSession httpSession;
 
     @GetMapping("/hello")
-    public int helloMessage(){
+    public String helloMessage(){
         String count =  httpSession.getAttribute("count") == null ? "0" : (String)httpSession.getAttribute("count");
-        Integer countInt = Integer.parseInt(count);
-        httpSession.setAttribute("count", String.valueOf(countInt+1));
-        return countInt;
+        Integer countInt = Integer.parseInt(count) +1;
+        httpSession.setAttribute("count", String.valueOf(countInt));
+        return count;
     }
 }

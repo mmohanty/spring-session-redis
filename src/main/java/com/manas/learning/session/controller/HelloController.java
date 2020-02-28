@@ -19,4 +19,10 @@ public class HelloController {
         httpSession.setAttribute("count", String.valueOf(countInt));
         return count;
     }
+
+    @GetMapping("/bye")
+    public String goodBye(){
+        httpSession.invalidate();
+        return "Session Destroyed";
+    }
 }

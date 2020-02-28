@@ -36,7 +36,7 @@ public class HttpSessionConfig extends AbstractHttpSessionApplicationInitializer
      /**
      * Cookie serializer is suitable for a web application. You have to be careful about setting path and domain.
     *  If any API-Gateway or Reverse Proxy server used in between and context path is not same as your application then, client will not be able to read cookies
-    *  hence will send null value to backend and it will be treated as a new session every time.
+    *  hence will send null/empty value to backend and it will be treated as a new session every time.
      * /
 	@Bean
     public CookieSerializer cookieSerializer() {

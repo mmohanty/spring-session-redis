@@ -1,19 +1,50 @@
 package com.manas.learning.session.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.session.data.redis.RedisIndexedSessionRepository;
+import org.springframework.session.data.redis.config.ConfigureRedisAction;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 import org.springframework.session.web.context.AbstractHttpSessionApplicationInitializer;
 import org.springframework.session.web.http.HttpSessionIdResolver;
 
 @Configuration
-@EnableRedisHttpSession
-public class HttpSessionConfig extends AbstractHttpSessionApplicationInitializer {
+@EnableRedisHttpSession(redisNamespace = "${spring.session.redis.namespace}")
+public class HttpSessionConfig extends AbstractHttpSessionApplicationInitializer implements ApplicationListener {
 
-   @Bean
+    @Value("${spring.session.timeout}")
+    private Integer maxInactiveIntervalInSeconds;
+
+    @Value("${spring.redis.host}")
+    private String host;
+
+
+    @Value("${spring.redis.port}")
+    private Integer port;
+
+    @Value("${spring.redis.pass}")
+    private String pass;
+
+    @Bean
     public LettuceConnectionFactory connectionFactory(){
-        return new LettuceConnectionFactory();
+
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+        redisStandaloneConfiguration.setHostName(host);
+        redisStandaloneConfiguration.setPort(port);
+        redisStandaloneConfiguration.setPassword(pass);
+        LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(redisStandaloneConfiguration);
+        return connectionFactory;
+    }
+
+    @Bean
+    public ConfigureRedisAction configureRedisAction(){
+        return ConfigureRedisAction.NO_OP;
     }
 
 
@@ -21,6 +52,14 @@ public class HttpSessionConfig extends AbstractHttpSessionApplicationInitializer
 	public HttpSessionIdResolver httpSessionIdResolver() {
 		return CustomHeaderHttpSessionIdResolver.xAuthToken();
 	}
+
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        if (event instanceof ContextRefreshedEvent) {
+            RedisIndexedSessionRepository repository =((ContextRefreshedEvent) event).getApplicationContext().getBean("sessionRepository" , RedisIndexedSessionRepository.class);
+            repository.setDefaultMaxInactiveInterval(maxInactiveIntervalInSeconds);
+        }
+    }
 
     /**
      * /**
